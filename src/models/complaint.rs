@@ -27,4 +27,16 @@ impl Complaints {
             resident_id,
         }
     }
+
+    pub fn get_id(&self) -> i64 {
+        self.id
+    }
+
+    pub fn update_status(&mut self, new_status: Status) {
+        self.status = new_status;
+    }
+
+    pub fn get_status(&self) -> Status {
+        self.status
+    }
 }
