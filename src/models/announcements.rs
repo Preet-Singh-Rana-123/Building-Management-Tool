@@ -16,4 +16,8 @@ impl Announcements {
             created_at: Local::now(),
         }
     }
+
+    pub fn get_id(&self) -> i64 {
+        self.id
+    }
 }
