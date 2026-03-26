@@ -39,4 +39,8 @@ impl Complaints {
     pub fn get_status(&self) -> Status {
         self.status
     }
+
+    pub fn get_resident_id(&self) -> i64 {
+        self.resident_id
+    }
 }

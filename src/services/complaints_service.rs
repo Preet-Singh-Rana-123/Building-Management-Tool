@@ -68,4 +68,11 @@ impl ComplaintService {
             .filter(|c| c.get_status() == status)
             .collect()
     }
+
+    pub fn show_by_resident_id(&self, resident_id: i64) -> Vec<&Complaints> {
+        self.complaints
+            .iter()
+            .filter(|c| c.get_resident_id() == resident_id)
+            .collect()
+    }
 }
