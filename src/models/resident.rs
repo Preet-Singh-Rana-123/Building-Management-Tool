@@ -1,3 +1,6 @@
+use serde::{Deserialize,Serialize};
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Resident {
     id: i64,
     name: String,
