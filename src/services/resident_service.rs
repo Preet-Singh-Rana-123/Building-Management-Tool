@@ -1,75 +1,108 @@
 use crate::models::resident::Resident;
+use crate::storage::file_storage::Storage;
 
-pub struct ResidentService {
-    residents: Vec<Resident>,
-    next_id: i64,
-}
+pub struct ResidentService;
 
 impl ResidentService {
-    pub fn new() -> Self {
-        Self {
-            residents: Vec::new(),
-            next_id: 1,
+    pub fn add(
+        storage: &Storage,
+        name: String,
+        flat: String,
+        phone: String,
+    ) -> Result<String, String> {
+        let mut residents = storage.load_residents();
+
+        if name.is_empty() {
+            return Err("Name cannot be empty".to_string());
         }
+
+        let id = storage.get_next_id(&residents);
+
+        let resident = Resident::new(id, name, flat, phone);
+        residents.push(resident);
+
+        storage.save_residents(&residents);
+
+        Ok("Resident added successfully".to_string())
     }
 
-    pub fn add(&mut self, name: String, flat: String, phone: String) {
-        let resident = Resident::new(self.next_id, name, flat, phone);
-
-        self.residents.push(resident);
-        self.next_id += 1;
+    pub fn show_all(storage: &Storage) -> Vec<Resident> {
+        storage.load_residents()
     }
 
-    pub fn show_all(&self) -> &[Resident] {
-        &self.residents
+    pub fn show_specific(storage: &Storage, resident_id: i64) -> Option<Resident> {
+        let residents = storage.load_residents();
+
+        residents.into_iter().find(|r| r.get_id() == resident_id)
     }
 
-    pub fn show_specific(&self, resident_id: i64) -> Option<&Resident> {
-        let result = self
-            .residents
-            .iter()
-            .find(|resident| resident.get_id() == resident_id);
-        result
-    }
+    pub fn update_name(
+        storage: &Storage,
+        resident_id: i64,
+        new_name: String,
+    ) -> Result<String, String> {
+        let mut residents = storage.load_residents();
 
-    pub fn update_name(&mut self, resident_id: i64, new_name: String) -> bool {
-        for resident in &mut self.residents {
-            if resident.get_id() == resident_id {
+        for resident in &mut residents {
+            if resident_id == resident.get_id() {
                 resident.update_name(new_name);
-                return true;
+                storage.save_residents(&residents);
+                return Ok("Name Updated successfully".to_string());
             }
         }
 
-        false
+        Err("Resident not found".to_string())
     }
 
-    pub fn update_phone(&mut self, resident_id: i64, new_phone: String) -> bool {
-        for resident in &mut self.residents {
-            if resident.get_id() == resident_id {
+    pub fn update_phone(
+        storage: &Storage,
+        resident_id: i64,
+        new_phone: String,
+    ) -> Result<String, String> {
+        let mut residents = storage.load_residents();
+
+        for resident in &mut residents {
+            if resident_id == resident.get_id() {
                 resident.update_phone(new_phone);
-                return true;
+                storage.save_residents(&residents);
+                return Ok("Flat Updated successfully".to_string());
             }
         }
 
-        false
+        Err("Resident not found".to_string())
     }
 
-    pub fn update_flat(&mut self, resident_id: i64, new_flat: String) -> bool {
-        for resident in &mut self.residents {
-            if resident.get_id() == resident_id {
+    pub fn update_flat(
+        storage: &Storage,
+        resident_id: i64,
+        new_flat: String,
+    ) -> Result<String, String> {
+        let mut residents = storage.load_residents();
+
+        for resident in &mut residents {
+            if resident_id == resident.get_id() {
                 resident.update_flat(new_flat);
-                return true;
+                storage.save_residents(&residents);
+                return Ok("Flat Updated successfully".to_string());
             }
         }
 
-        false
+        Err("Resident not found".to_string())
     }
 
-    pub fn delete(&mut self, resident_id: i64) -> bool {
-        let initial_length = self.residents.len();
-        self.residents
-            .retain(|resident| resident.get_id() != resident_id);
+    pub fn delete(storage: &Storage, resident_id: i64) -> Result<String, String> {
+        let mut residents = storage.load_residents();
 
-        initial_length != self.residents.len()
+        let initial_length = residents.len();
+
+        residents.retain(|r| r.get_id() != resident_id);
+
+        if residents.len() == initial_length {
+            return Err("Resident not found".to_string());
+        }
+
+        storage.save_residents(&residents);
+
+        Ok("Resident deleted successfully".to_string())
     }
 }
