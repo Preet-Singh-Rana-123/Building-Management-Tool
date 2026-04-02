@@ -1,5 +1,8 @@
 use crate::enums::{Priority, Status};
+use crate::traits::identifiable::Identifiable;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Complaints {
     id: i64,
     title: String,
@@ -7,6 +10,12 @@ pub struct Complaints {
     status: Status,
     priority: Priority,
     resident_id: i64,
+}
+
+impl Identifiable for Complaints {
+    fn get_id(&self) -> i64 {
+        self.id
+    }
 }
 
 impl Complaints {

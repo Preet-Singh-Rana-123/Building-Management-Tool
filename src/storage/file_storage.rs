@@ -1,4 +1,7 @@
+use crate::models::announcements::Announcements;
+use crate::models::complaint::Complaints;
 use crate::models::resident::Resident;
+use crate::traits::identifiable::Identifiable;
 use serde_json;
 use std::fs;
 use std::path::Path;
@@ -24,7 +27,7 @@ impl Storage {
 
     // Handle Complaint data
 
-    pub fn load_complaints(&self) -> Vec<Resident> {
+    pub fn load_complaints(&self) -> Vec<Complaints> {
         if !Path::new(&self.complaints_file_path).exists() {
             return Vec::new();
         }
@@ -34,14 +37,14 @@ impl Storage {
         serde_json::from_str(&data).unwrap_or(Vec::new())
     }
 
-    pub fn save_complaints(&self, complaints: &Vec<Resident>) {
+    pub fn save_complaints(&self, complaints: &Vec<Complaints>) {
         let data = serde_json::to_string_pretty(complaints).unwrap();
         fs::write(&self.complaints_file_path, data).expect("Unable to write in file");
     }
 
     // Handle Announcement data
 
-    pub fn load_announcements(&self) -> Vec<Resident> {
+    pub fn load_announcements(&self) -> Vec<Announcements> {
         if !Path::new(&self.announcements_file_path).exists() {
             return Vec::new();
         }
@@ -51,7 +54,7 @@ impl Storage {
         serde_json::from_str(&data).unwrap_or(Vec::new())
     }
 
-    pub fn save_announcements(&self, announcements: &Vec<Resident>) {
+    pub fn save_announcements(&self, announcements: &Vec<Announcements>) {
         let data = serde_json::to_string_pretty(announcements).unwrap();
         fs::write(&self.announcements_file_path, data).expect("Unable to write in file");
     }
@@ -73,7 +76,7 @@ impl Storage {
         fs::write(&self.resident_file_path, data).expect("Unable to write in file");
     }
 
-    pub fn get_next_id(&self, residents: &Vec<Resident>) -> i64 {
-        residents.iter().map(|r| r.get_id()).max().unwrap_or(0) + 1
+    pub fn get_next_id<T: Identifiable>(&self, items: &Vec<T>) -> i64 {
+        items.iter().map(|r| r.get_id()).max().unwrap_or(0) + 1
     }
 }

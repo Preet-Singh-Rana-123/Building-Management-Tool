@@ -1,12 +1,11 @@
 use crate::{
     enums::{Priority, Status},
     models::{complaint::Complaints, resident::Resident},
+    storage::file_storage::Storage,
 };
 
-pub struct ComplaintService {
-    complaints: Vec<Complaints>,
-    next_id: i64,
-}
+pub struct ComplaintService;
+
 //pub struct Complaints {
 //    id: i64,
 //    title: String,
@@ -17,61 +16,64 @@ pub struct ComplaintService {
 //}
 
 impl ComplaintService {
-    pub fn new() -> Self {
-        Self {
-            complaints: Vec::new(),
-            next_id: 1,
-        }
-    }
-
     pub fn add(
-        &mut self,
+        storage: &Storage,
         title: String,
         discription: String,
         status: Status,
         priority: Priority,
         resident: &Resident,
-    ) {
-        let complaint = Complaints::new(
-            self.next_id,
-            title,
-            discription,
-            status,
-            priority,
-            resident.get_id(),
-        );
+    ) -> Result<String, String> {
+        let mut complaints = storage.load_complaints();
 
-        self.complaints.push(complaint);
-        self.next_id += 1;
-    }
-
-    pub fn show_all(&self) -> &[Complaints] {
-        &self.complaints
-    }
-
-    pub fn update_status(&mut self, complaint_id: i64, new_status: Status) -> bool {
-        if let Some(complaint) = self
-            .complaints
-            .iter_mut()
-            .find(|complaint| complaint.get_id() == complaint_id)
-        {
-            complaint.update_status(new_status);
-            return true;
+        if title.is_empty() {
+            return Err("Title cannot be empty".to_string());
         }
 
-        false
+        let id = storage.get_next_id(&complaints);
+
+        let complaint =
+            Complaints::new(id, title, discription, status, priority, resident.get_id());
+        complaints.push(complaint);
+        storage.save_complaints(&complaints);
+
+        Ok("Complaint added successfully".to_string())
     }
 
-    pub fn show_by_status(&self, status: Status) -> Vec<&Complaints> {
-        self.complaints
-            .iter()
+    pub fn show_all(storage: &Storage) -> Vec<Complaints> {
+        storage.load_complaints()
+    }
+
+    pub fn update_status(
+        storage: &Storage,
+        complaint_id: i64,
+        new_status: Status,
+    ) -> Result<String, String> {
+        let mut complaints = storage.load_complaints();
+
+        for complaint in &mut complaints {
+            if complaint.get_id() == complaint_id {
+                complaint.update_status(new_status);
+                storage.save_complaints(&complaints);
+                return Ok("Status updated successfully".to_string());
+            }
+        }
+
+        Err("Complaint not found".to_string())
+    }
+
+    pub fn show_by_status(storage: &Storage, status: Status) -> Vec<Complaints> {
+        let complaints = storage.load_complaints();
+        complaints
+            .into_iter()
             .filter(|c| c.get_status() == status)
             .collect()
     }
 
-    pub fn show_by_resident_id(&self, resident_id: i64) -> Vec<&Complaints> {
-        self.complaints
-            .iter()
+    pub fn show_by_resident_id(storage: &Storage, resident_id: i64) -> Vec<Complaints> {
+        let complaints = storage.load_complaints();
+        complaints
+            .into_iter()
             .filter(|c| c.get_resident_id() == resident_id)
             .collect()
     }

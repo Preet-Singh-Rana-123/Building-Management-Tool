@@ -1,4 +1,5 @@
-use serde::{Deserialize,Serialize};
+use crate::traits::identifiable::Identifiable;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Resident {
@@ -6,6 +7,12 @@ pub struct Resident {
     name: String,
     flat_number: String,
     phone: String,
+}
+
+impl Identifiable for Resident {
+    fn get_id(&self) -> i64 {
+        self.id
+    }
 }
 
 impl Resident {
