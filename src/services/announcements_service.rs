@@ -1,33 +1,40 @@
-use crate::models::announcements::Announcements;
+use crate::{
+    models::announcements::{self, Announcements},
+    storage::{self, file_storage::Storage},
+};
 
-pub struct AnnouncementService {
-    anouncements: Vec<Announcements>,
-    next_id: i64,
-}
+pub struct AnnouncementService;
 
 impl AnnouncementService {
-    pub fn new() -> Self {
-        Self {
-            anouncements: Vec::new(),
-            next_id: 1,
+    pub fn add(storage: &Storage, title: String, message: String) -> Result<String, String> {
+        let mut announcements = storage.load_announcements();
+        if title.is_empty() {
+            return Err("Title cannot be empty".to_string());
         }
+
+        let id = storage.get_next_id(&announcements);
+
+        let announcement = Announcements::new(id, title, message);
+        announcements.push(announcement);
+
+        Ok("Announcement added successfully".to_string())
     }
 
-    pub fn add(&mut self, title: String, message: String) {
-        let announcement = Announcements::new(self.next_id, title, message);
-
-        self.anouncements.push(announcement);
-        self.next_id += 1;
+    pub fn show_all(storage: &Storage) -> Vec<Announcements> {
+        storage.load_announcements()
     }
 
-    pub fn show_all(&self) -> &[Announcements] {
-        &self.anouncements
-    }
+    pub fn delete(storage: &Storage, announcement_id: i64) -> Result<String, String> {
+        let mut anouncements = storage.load_announcements();
+        let initial_length = anouncements.len();
+        anouncements.retain(|a| a.get_id() != announcement_id);
 
-    pub fn delete(&mut self, announcement_id: i64) -> bool {
-        let initial_length = self.anouncements.len();
-        self.anouncements.retain(|a| a.get_id() != announcement_id);
+        if anouncements.len() == initial_length {
+            return Err("Announcement not found".to_string());
+        }
 
-        initial_length != self.anouncements.len()
+        storage.save_announcements(&anouncements);
+
+        Ok("Announcement deleteed successfully".to_string())
     }
 }
