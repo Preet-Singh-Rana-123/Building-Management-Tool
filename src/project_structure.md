@@ -1,3 +1,6 @@
+# Building Manager Project Structure
+
+```
 building_manager/
 │
 ├── Cargo.toml
@@ -58,3 +61,4 @@ building_manager/
 │ ├── app.log
 │
 └── README.md
+```
